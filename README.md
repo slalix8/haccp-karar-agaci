@@ -1,33 +1,58 @@
 # 🛡️ Automated HACCP Decision Tree & Food Safety Verification Engine
 
-Gıda güvenliği yönetim sistemlerinde (BRCGS v9, ISO 22000, Codex Alimentarius) tehlike analizi ve kritik kontrol noktası (CCP) belirleme süreçlerini otomatize eden Python tabanlı kural motoru.
+![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
+![Standard](https://img.shields.io/badge/Standard-BRCGS%20v9%20%7C%20Codex-brightgreen.svg)
+![License](https://img.shields.io/badge/Status-Auditing%20Ready-orange.svg)
 
-Manuel Excel takiplerindeki insan hatasını sıfırlayarak; tehlike girdilerini okur, 4 adımlı Codex karar ağacı algoritmasını çalıştırır, CCP / oPRP sınıflandırmasını yapar ve denetime hazır biçimlendirilmiş bir Excel raporu üretir.
+Gıda güvenliği yönetim sistemlerinde (**BRCGS Food Safety Issue 9**, **ISO 22000:2018** ve **Codex Alimentarius CXC 1-1969**) tehlike analizi ve kritik kontrol noktası (CCP/oPRP) sınıflandırma süreçlerini otomatize eden Python tabanlı kural motoru.
 
----
-
-## 🚀 Temel Özellikler
-
-* **Kural Tabanlı Karar Motoru:** Codex Alimentarius CCP karar ağacı mantığını (S1-S4 soruları) dinamik olarak işletir.
-* **Risk Matrisi ve Sınıflandırma:** Olasılık ve şiddet parametrelerini değerlendirerek tehlikeleri ön elemeden geçirir.
-* **Otomatik Operasyonel Parametre Eşleme:** Tespit edilen her CCP için kritik limitleri, izleme sıklığını, yöntemini ve düzeltici faaliyet prosedürlerini otomatik bağlar.
-* **Denetim Uyumlu Raporlama (`openpyxl`):** Çıktı tablosunu BRCGS standartlarına uygun başlık renkleri, otomatik hücre genişlikleri ve karar türüne özel renk kodlarıyla (CCP: Kırmızı, oPRP: Sarı, PRP: Yeşil) formatlar.
+Manuel takip edilen Excel tablolarındaki formül bozulmalarını, subjektif değerlendirme sapmalarını ve operatör hatalarını sıfırlamak üzere kurgulanmıştır.
 
 ---
 
-## 🛠️ Kullanılan Teknolojiler
+## 📊 Örnek Denetim Çıktısı
 
-* **Dil:** Python 3.13+
-* **Veri Manipülasyonu:** `pandas`
-* **Rapor Biçimlendirme & Tasarım:** `openpyxl`
-* **Standartlar:** Codex Alimentarius, BRCGS Food Safety Issue 9, ISO 22000:2018
+Motor tarafından otomatik işlenen, renklendirilen ve kritik limitleri bağlanan final Excel raporu:
+
+![HACCP Final Raporu](ekran_goruntusu.png)
 
 ---
 
-## 📁 Proje Yapısı
+## ⚙️ Karar Motoru Mantığı (Decision Logic)
+
+Sistem iki aşamalı bir doğrulama katmanından oluşur:
+
+1. **Risk Değerlendirme Filtresi ($O \times Ş$):**
+   * Tehlikeler Olasılık (1-5) ve Şiddet (1-5) matrisine göre puanlanır.
+   * Risk Skoru $\le 8$ olan parametreler operasyonel yük oluşturmaması adına doğrudan **PRP (Ön Gereksinim)** olarak etiketlenir.
+   * Risk Skoru $> 8$ olan kritik tehlikeler Codex Karar Ağacı protokolüne sevk edilir.
+
+2. **Codex Alimentarius 4 Aşamalı Karar Ağacı:**
+   * **S1 (Önleyici Faaliyet):** Önlem var mı? $\rightarrow$ *Yoksa: Proses Tasarımı Revizyonu*
+   * **S2 (Eliminasyon / Azaltma):** Bu adım tehlikeyi kabul edilebilir seviyeye indiriyor mu? $\rightarrow$ *Evetse: **CCP***
+   * **S3 (Artış Riski):** Tehlike kabul edilemez seviyeye çıkabilir mi? $\rightarrow$ *Hayırsa: PRP*
+   * **S4 (Sonraki Adım Kontrolü):** Sonraki adımlarda bu tehlike elenecek mi? $\rightarrow$ *Evetse: **oPRP**, Hayırsa: **CCP***
+
+3. **Otomatik İzleme & Limit Eşleme:**
+   * Bir proses **CCP** çıktığı anda endüstriyel standart kütüphanesinden ilgili parametreleri otomatik çeker:
+     * *Örn. Haşlama:* Sıcaklık $\ge 90$°C, Süre $\ge 90$ sn, PT100 sürekli sensör izleme, limit aşımında otomatik karantina ve tekrar işlem.
+     * *Örn. Metal Dedektör:* Fe: 1.5 mm, Non-Fe: 2.0 mm, SS: 2.5 mm test çubukları, saatlik sinyal testi, limit aşımında son 1 saatlik lotu bloke etme.
+
+---
+
+## 🛠️ Teknik Altyapı
+
+* **Çekirdek:** Python
+* **Veri Analitiği:** `pandas` (Vektörize koşullu eşleme motoru)
+* **Rapor Tasarımı:** `openpyxl` (Kurumsal hücre renklendirme, sınır çizgileri, otomatik sütun genişlik hesaplaması)
+
+---
+
+## 📁 Dizin Yapısı
 
 ```text
-├── tehlike_listesi.xlsx        # Girdi: Proses adımları ve karar ağacı yanıtları
-├── haccp_analiz.py             # Analiz ve stil formatlama motoru
-├── haccp_plani_final.xlsx      # Çıktı: Formatlanmış BRCGS uyumlu HACCP planı
-└── README.md                   # Proje dokümantasyonu
+├── tehlike_listesi.xlsx        # Girdi: Tehlike parametreleri ve S1-S4 yanıtları
+├── haccp_analiz.py             # Analiz algoritması ve openpyxl biçimlendirici
+├── haccp_plani_final.xlsx      # Çıktı: Renk kodlu, denetime hazır HACCP planı
+├── ekran_goruntusu.png         # README için görsel kanıt
+└── README.md                   # Teknik dokümantasyon
