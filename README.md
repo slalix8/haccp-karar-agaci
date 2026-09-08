@@ -14,7 +14,7 @@ Manuel takip edilen Excel tablolarındaki formül bozulmalarını, subjektif de�
 
 Motor tarafından otomatik işlenen, renklendirilen ve kritik limitleri bağlanan final Excel raporu:
 
-![HACCP Final Raporu](ekran_goruntusu.png)
+![HACCP Final Raporu](image.png)
 
 ---
 
